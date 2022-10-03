@@ -36,7 +36,7 @@ module.exports = {
             )
             .catch((err) => res.status(500).json(err));
     },
-    // update a thought
+    // update a thought by its ID
     updateThought(req, res) {
         Thought.findOneAndUpdate(
             { _id: req.params.thoughtId },
@@ -50,16 +50,46 @@ module.exports = {
         )
         .catch((err) => res.status(500).json(err));
     },
-    
+    // delete a thought by its ID
     deleteThought(req, res) {
-
+        Thought.findOneAndDelete({ _id: req.params.thoughtId })
+            .then((thought) =>
+                !thought
+                    ? res.status(404).json({ message: 'No thoughts with this ID' })
+                    : User.findOneAndUpdate(
+                        { thoughts: req.params.thoughtId },
+                        { $pull: {thoughts: req.params.thoughtId }},
+                        { new: true }
+                    )
+            )
+            .catch((err) => res.status(500).json(err));
     },
-    
+    // add a reaction linked to the thought ID
     createReaction(req, res) {
-
+        Thought.findOneAndUpdate(
+            { _id: req.params.thoughtId },
+            { $push: { reactions: req.params.reactionId }},
+            { runValidators: true, new: true},
+        )
+        .then((thought) =>
+            !thought
+                ? res.status(404).json({ message: 'No thoughts with this ID' })
+                : res.json(thought)
+        )
+        .catch((err) => res.status(500).json(err));
     },
-    
+    // delete a reaction by the reaction's ID
     deleteReaction(req, res) {
-
+        Thought.findOneAndUpdate(
+            { _id: req.params.thoughtId },
+            { $pull: { reactions: { reactionId: req.params.reactionId }}},
+            { runValidators: true, new: true }
+        )
+        .then((thought) =>
+            !thought
+                ? res.status(404).json({ message: 'No thoughts with this ID'})
+                : res.json(thought)
+        )
+        .catch((err) => res.status(500).json(err));
     },
 };
